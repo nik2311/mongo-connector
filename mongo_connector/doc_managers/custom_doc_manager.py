@@ -8,9 +8,8 @@ from neo4j.v1 import GraphDatabase
 
 class Neo4jconnector(object):
     
-    def __init__(self):
-        uri = "bolt://localhost:7687"
-        self.driver = GraphDatabase.driver(uri, auth=("neo4j", "neodev"))
+    def __init__(self,uri="bolt://localhost:7687",auth=("neo4j", "neodev")):
+        self.driver = GraphDatabase.driver(uri, auth=auth
     
 
 
@@ -53,6 +52,7 @@ class DocManager(DocManagerBase):
         self.auto_commit_interval = auto_commit_interval
         self.unique_key = unique_key
         self.chunk_size = chunk_size
+        self.neo_connect = Neo4jconnector()
         print(kwargs)
 
     def upsert(self, doc, namespace, timestamp):
