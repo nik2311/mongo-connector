@@ -3,12 +3,17 @@ from mongo_connector.doc_managers.doc_manager_base import DocManagerBase
 
 from mongo_connector import errors, constants
 from neo4j.v1 import GraphDatabase
+import os
 
 
 
 class Neo4jconnector(object):
     
     def __init__(self,uri="bolt://localhost:7687",auth=("neo4j", "neodev")):
+        uri = os.environ.get('NEO4J_HOST','bolt://localhost:7687')
+        neo_user = os.environ.get('NEO4J_USER','neo4j')
+        neo_pass = os.environ.get('NEO4J_PASS','neo4j!123')
+        auth = (neo_user,neo_pass)
         self.driver = GraphDatabase.driver(uri, auth=auth)
 
     def createUser(self,user,namespace=None):
@@ -48,6 +53,8 @@ class Neo4jconnector(object):
                     with self.driver.session() as session:
                         with session.begin_transaction() as tx:
                             tx.run("Create (u:PhoneContact {appFBId:{appFBId},contactName:{contactName},phoneNumber:{phoneNumber}});",**phone)
+                            self.createPhoneContactRelation({'appFBId':phone['appFBId']})
+                            self.createSameContact({'appFBId':phone['appFBId']})
         
 
     def createPhoneContactRelation(self,data,namespace=None):
