@@ -103,8 +103,10 @@ class DocManager(DocManagerBase):
         print("DELETE : ",document_id,namespace)
 
     def search(self, start_ts, end_ts):
+        pass
         # print("search from {0} to {1}".format(start_ts,end_ts))
 
     def handle_command(self, doc, namespace, timestamp):
         db = namespace.split('.', 1)[0]
+        pass
         # print(db,namespace)
