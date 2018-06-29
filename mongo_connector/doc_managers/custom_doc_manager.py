@@ -5,6 +5,8 @@ from mongo_connector import errors, constants
 from neo4j.v1 import GraphDatabase
 import os
 import functools
+from neo4j.exceptions import NotALeaderError
+import re
 
 
 def getClusterLeader(driver,knowhost,neouser,neopass,protocol='bolt'):
@@ -23,18 +25,26 @@ def getClusterLeader(driver,knowhost,neouser,neopass,protocol='bolt'):
 def neomaster(func):
         @functools.wraps(func)
         def wrap(self, *args, **kwargs):
-            try:
-                print("Writing to host : ",self.uri)
-                query,params=func(self, *args, **kwargs)
-                if query and params:
-                    with self.driver.session() as session:
-                        with session.begin_transaction() as tx:
-                            tx.run(query,**params)
-            except Exception as e:
-                print(e)
-                leader = getClusterLeader(self.driver,self.uri,self.neo4juser,self.neo4jpass)
-                self.uri = leader if leader else uri
-                self.driver = GraphDatabase.driver(uri, auth=(self.neo4juser,self.neo4jpass))
+            tries=5
+            done = False
+            while not done and tries > 0:
+                try:
+                    print("Writing to host : ",self.uri)
+                    query,params=func(self, *args, **kwargs)
+                    if query and params:
+                        with self.driver.session() as session:
+                            with session.begin_transaction() as tx:
+                                tx.run(query,**params)
+                                print("COMPLETED ",params)
+                                done = True
+                except NotALeaderError as e:
+                    done = False
+                    tries = tries - 1
+                    print(e)
+                    leader = getClusterLeader(self.driver,self.uri,self.neo_user,self.neo_pass)
+                    self.uri = leader if leader else self.uri
+                    print("MASTER CHANGED RECONNECTING TO ",self.uri ,"tries left : ",tries)
+                    self.driver = GraphDatabase.driver(self.uri, auth=(self.neo_user,self.neo_pass))
         return wrap
 
 
