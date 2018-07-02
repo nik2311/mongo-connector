@@ -99,7 +99,7 @@ class Neo4jconnector(object):
         return query,params
 
     def createNewPhoneContact(self,data,namespace=None):
-        if namespace=='appuserphonecontacts':
+        if namespace=='appusercontacts':
             for phonedata in data.get('contactRow',{}).get('phones',[]):
                 phone = dict()
                 phone['appFBId'] = data.get('appFBId',None)
