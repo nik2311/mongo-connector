@@ -7,7 +7,9 @@ import os
 import functools
 from neo4j.exceptions import NotALeaderError
 import re
+import logging
 
+LOG = logging.getLogger(__name__)
 
 def getClusterLeader(driver,knowhost,neouser,neopass,protocol='bolt'):
     if not driver:
@@ -45,6 +47,10 @@ def neomaster(func):
                     self.uri = leader if leader else self.uri
                     print("MASTER CHANGED RECONNECTING TO ",self.uri ,"tries left : ",tries)
                     self.driver = GraphDatabase.driver(self.uri, auth=(self.neo_user,self.neo_pass))
+                except Exception as e:
+                    print(e)
+                    LOG.exception(" Exception ",str(e),query,params)
+                    done = True
         return wrap
 
 
